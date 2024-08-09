@@ -185,6 +185,10 @@ void bind_lua_functions(sol::state &lua, sol::table &ui_table, const std::string
         lua["get_framework_git_date_unix"] = wrap(get_framework_git_date_unix);
         lua["get_framework_git_date_text"] = wrap(get_framework_git_date_text);
         lua["get_os_username"] = wrap(get_os_username);
+        lua["mk_link"] = wrap(mk_link);
+        lua["file_link_points_to"] = wrap(file_link_points_to);
+        lua["is_file_path_equal"] = wrap(is_file_path_equal);
+        lua["path_exists"] = wrap(path_exists);
     }
     //noise level
     {
@@ -275,12 +279,12 @@ void bind_lua_functions(sol::state &lua, sol::table &ui_table, const std::string
 					   obj = obj or _ENV
 					   local res = {}
 					   for k, v in pairs(obj) do
-						   if string.find("boolean number string function table", type(v)) then --not copying "thread" and "userdata"
-							   --print("Copied " .. k .. " of type " .. type(v))
-							   res[k] = v
-						   else
-							   --print("Skipped " .. k .. " of type " .. type(v))
-						   end
+                           if string.find("boolean number string function table", type(v)) then --not copying "thread" and "userdata"
+                               --print( "Copied " .. k .. " of type " .. type(v))
+                               res[k] = v
+                           else
+                               --print( "Skipped " .. k .. " of type " .. type(v))
+                           end
 					   end
 					   return res
 				   end
@@ -296,19 +300,35 @@ void bind_lua_functions(sol::state &lua, sol::table &ui_table, const std::string
                         "import function");
     }
     //set up require paths
-    { lua.safe_script("package.path = \"" + QSettings{}.value(Globals::test_script_path_settings_key, "").toString().toStdString() + "/?.lua\""); }
-    //add generic function
+#if 0
+    {
+        lua.safe_script("package.path = \"" + QSettings{}.value(Globals::test_script_path_settings_key, "").toString().replace("\\", "\\\\").toStdString() +
+                        "/?.lua\"");
+    }
+#endif
+    //set up require paths
+    {
+        lua.safe_script("package.path = \"" + get_lua_lib_search_paths_for_lua("", "/?.lua").join(";").toStdString() + std::string("\""));
+    } //add generic function
     {
 //TODO: Figure out why the lambda version crashes on Windows and the Require version does not.
 #if 1
         struct Require {
             std::string path;
             sol::state &lua;
-            void operator()(const std::string &file) const {
-                abort_check();
-                QDir dir(QString::fromStdString(path));
-                dir.cdUp();
-                lua.script_file(dir.absoluteFilePath(QString::fromStdString(file) + ".lua").toStdString());
+            sol::protected_function_result operator()(const std::string &file) const {
+                auto search_paths = get_lua_lib_search_paths_for_lua(QString::fromStdString(path), "");
+                QString tried_paths;
+                for (auto &p : search_paths) {
+                    QDir dir(p);
+                    auto abs_path = dir.absoluteFilePath(QString::fromStdString(file) + ".lua");
+                    tried_paths += '\n' + abs_path;
+                    if (QFile::exists(abs_path)) {
+                        return lua.script_file(abs_path.toStdString());
+                    }
+                }
+                throw std::runtime_error("Can not find a path to required module \"" + file + "\" for script: " + path +
+                                         ". Tried paths: " + tried_paths.toStdString());
             }
         };
 

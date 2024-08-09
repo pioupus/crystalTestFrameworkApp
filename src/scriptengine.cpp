@@ -148,7 +148,7 @@ struct RPCDevice {
         return false;
     }
 
-    sol::object call_rpc_function(const std::string &name, const sol::variadic_args &va) {
+    sol::object call_rpc_function(const std::string &name, const sol::variadic_args &va, bool show_message_box_when_timeout) {
         Console_handle::note() << QString("\"%1\" called").arg(name.c_str());
         auto function = protocol->encode_function(name);
         int param_count = 0;
@@ -159,7 +159,7 @@ struct RPCDevice {
         if (not function.are_all_values_set()) {
             throw sol::error("Failed calling function, missing parameters");
         }
-        auto result = protocol->call_and_wait(function);
+        auto result = protocol->call_and_wait(function, show_message_box_when_timeout);
         if (result) {
             try {
                 auto output_params = result->get_decoded_parameters();
@@ -204,6 +204,18 @@ static void add_enum_type(const RPCRuntimeParameterDescription &param, sol::stat
             return "";
         };
         device[enum_description.enum_name] = std::move(table);
+    } else if (param.get_type() == RPCRuntimeParameterDescription::Type::array) {
+        auto array = param.as_array();
+
+        if ((array.type.get_type() == RPCRuntimeParameterDescription::Type::enumeration)) {
+            //&& (array.number_of_elements == 1)
+            add_enum_type(array.type, lua, device);
+        } else if ((array.type.get_type() == RPCRuntimeParameterDescription::Type::structure)) {
+            auto structure = array.type.as_structure();
+            for (auto &member : structure.members) {
+                add_enum_type(member, lua, device);
+            }
+        }
     }
 }
 
@@ -432,6 +444,8 @@ std::string ScriptEngine::to_string(const sol::table &table) {
     if (retval.size() > 1) {
         retval.pop_back();
         retval.back() = '}';
+    } else {
+        retval.push_back('}');
     }
     return retval;
 }
@@ -498,7 +512,7 @@ void ScriptEngine::reset_lua_state() {
         if (device.has_function(name)) {
             return sol::object(*lua, sol::in_place, [function_name = std::move(name)](RPCDevice &device, const sol::variadic_args &va) {
                 abort_check();
-                return device.call_rpc_function(function_name, va);
+                return device.call_rpc_function(function_name, va, true);
             });
         }
         if (device.enums[name].valid()) {
@@ -510,7 +524,7 @@ void ScriptEngine::reset_lua_state() {
         abort_check();
         auto result = create_table();
         try {
-            result["result"] = device.call_rpc_function(function_name, va);
+            result["result"] = device.call_rpc_function(function_name, va, false);
             result["timeout"] = false;
             return result;
         } catch (const RPCTimeoutException &) {
@@ -526,6 +540,7 @@ void ScriptEngine::reset_lua_state() {
         abort_check();
         return device.is_protocol_device_available();
     });
+    assert(lua_devices);
 }
 
 void ScriptEngine::launch_editor(QString path, int error_line) {
@@ -661,8 +676,13 @@ sol::table ScriptEngine::get_device_requirements_table() {
     return create_table();
 }
 
-std::string ScriptEngine::device_list_string() const {
-    return to_string(*lua_devices);
+std::string ScriptEngine::device_list_string() {
+    return Utility::promised_thread_call(this, [this] {
+        if (currently_in_gui_thread()) {
+            return final_device_list_string;
+        }
+        return lua_devices.has_value() ? to_string(*lua_devices) : "{}";
+    });
 }
 
 std::vector<DeviceRequirements> ScriptEngine::get_device_requirement_list() {
@@ -727,7 +747,9 @@ sol::table ScriptEngine::get_devices(const std::vector<MatchedDevice> &devices) 
     }
 
     //ordering/grouping devices..
-    lua_devices = lua->create_table_with();
+    if (!lua_devices) {
+        lua_devices = lua->create_table_with();
+    }
     for (auto sol_device : no_alias_device_list) {
         lua_devices->add(sol_device);
     }
@@ -748,6 +770,7 @@ sol::table ScriptEngine::get_devices(const std::vector<MatchedDevice> &devices) 
 }
 
 void ScriptEngine::run(std::vector<MatchedDevice> &devices) {
+    assert(lua_devices);
     qDebug() << "ScriptEngine::run";
     assert(not currently_in_gui_thread());
     matched_devices = &devices;
@@ -767,6 +790,7 @@ void ScriptEngine::run(std::vector<MatchedDevice> &devices) {
         reset_lua_state();
     } catch (const sol::error &e) {
         qDebug() << "caught sol::error@run";
+        final_device_list_string = to_string(*lua_devices);
         set_error_line(e);
         reset_lua_state();
         throw;

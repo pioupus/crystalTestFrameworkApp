@@ -9,6 +9,8 @@
 
 class QPlainTextEdit;
 
+QStringList get_lua_lib_search_paths_for_lua(const QString &script_path, const QString &lua_search_pattern);
+
 QString create_path(QString filename);
 QString get_clean_file_path(QString filename);
 QString append_separator_to_path(QString path);
@@ -68,4 +70,9 @@ std::string get_framework_git_hash();
 double get_framework_git_date_unix();
 std::string get_framework_git_date_text();
 std::string get_os_username();
+void mk_link(std::string link_pointing_to, std::string link_name);
+std::string file_link_points_to(std::string link_name);
+bool path_exists(std::string path);
+bool is_file_path_equal(std::string file_path_a, std::string file_path_b);
+
 #endif // LUA_FUNCTIONS_H

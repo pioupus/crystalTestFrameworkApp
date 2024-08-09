@@ -219,6 +219,11 @@ void bind_dataengineinput(sol::state &lua, sol::table &ui_table, ScriptEngine &s
                 abort_check();
                 return handle.data_engine->is_text(QString::fromStdString(field_id));
             },
+            "is_datetime",
+            +[](Data_engine_handle &handle, const std::string &field_id) {
+                abort_check();
+                return handle.data_engine->is_datetime(QString::fromStdString(field_id));
+            },
             "is_number",
             +[](Data_engine_handle &handle, const std::string &field_id) {
                 abort_check();
@@ -261,7 +266,7 @@ void bind_dataengineinput(sol::state &lua, sol::table &ui_table, ScriptEngine &s
             "all_values_in_range", +[](Data_engine_handle &handle) { return handle.data_engine->all_values_in_range(); });
     }
 }
-
+///\cond HIDDEN_SYMBOLS
 Data_engine_handle::~Data_engine_handle() {
     if (not data_engine) { //moved from
         return;
@@ -312,3 +317,4 @@ Data_engine_handle::~Data_engine_handle() {
         console->error() << e.what();
     }
 }
+/// \endcond

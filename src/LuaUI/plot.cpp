@@ -238,20 +238,7 @@ Curve::~Curve() {
 }
 
 void Curve::add(const std::vector<double> &data) {
-    if (data.empty()) {
-        return;
-    }
-    if (not plot) {
-        throw std::runtime_error{"Curve is not associated with a plot"};
-    }
-    curve_data().add(data);
-    //TODO: This is a hack. value_added exists so we scroll correctly, so adding the front and back only is fine. If it starts getting used for something else this will become wrong.
-    plot->value_added(curve_data().xvalues.front(), curve_data().yvalues_orig.front());
-    plot->value_added(curve_data().xvalues.back(), curve_data().yvalues_orig.back());
-    const auto [min_it, max_it] = std::minmax_element(std::begin(data), std::end(data));
-    plot->value_added(min_it - std::begin(data), *min_it);
-    plot->value_added(max_it - std::begin(data), *max_it);
-    update();
+    add_spectrum_at(0, data);
 }
 
 void Curve::append_point(double x, double y) {
@@ -680,9 +667,10 @@ struct Plot_export_data {
     std::string test_name;
     std::string device_string;
     QPushButton *export_button;
+    Plot *plot;
 };
 
-static void export_plot(QwtPlot *plot, Plot_export_data &plot_data, QPushButton *export_button) {
+void export_plot(QwtPlot *plot, Plot_export_data &plot_data, QPushButton *export_button) {
     static const auto font = QFont("Arial", 10);
 #ifdef WIN32
     constexpr static const char *root_prefix = "C:";
@@ -708,9 +696,7 @@ static void export_plot(QwtPlot *plot, Plot_export_data &plot_data, QPushButton 
     const auto text_filename = QString{file}.replace(QRegularExpression{R"(\.[^\.]{3,4}$)"}, ".txt");
     std::ofstream f{text_filename.toStdString()};
     f << "Test: " << plot_data.test_name << '\n';
-    f << "Devices: " << plot_data.device_string << '\n';
-    f << "Curves: "
-      << "\n";
+    f << "Devices: " << (plot_data.plot ? plot_data.plot->scriptengine->device_list_string() : plot_data.device_string) << '\n';
 }
 
 Plot::Plot(UI_container *parent, ScriptEngine *scriptengine)
@@ -720,13 +706,15 @@ Plot::Plot(UI_container *parent, ScriptEngine *scriptengine)
     , track_picker(new TimePicker{plot->canvas()})
     , clicker(new QwtPickerClickPointMachine)
     , tracker(new QwtPickerTrackerMachine)
-    , export_button{new QPushButton(plot)} {
+    , export_button{new QPushButton(plot)}
+    , scriptengine{scriptengine} {
     export_button->setIcon(QIcon::fromTheme("document-save", QIcon{"://src/icons/icons8-save-48.png"}));
     export_button->raise();
     auto plot_data_up = std::make_unique<Plot_export_data>();
     plot_data = plot_data_up.get();
     plot_data->device_string = scriptengine->device_list_string();
     plot_data->test_name = scriptengine->test_name.toStdString();
+    plot_data->plot = this;
     connect(export_button, &QPushButton::clicked,
             [plot = plot, plot_data = std::move(plot_data_up), export_button = export_button] { export_plot(plot, *plot_data, export_button); });
     assert(currently_in_gui_thread());
@@ -750,6 +738,8 @@ Plot::~Plot() {
         curve->plot = nullptr;
     }
     zoomer_controller->parent_plot = nullptr;
+    plot_data->device_string = scriptengine->device_list_string();
+    plot_data->plot = nullptr;
 }
 
 void Plot::clear() {

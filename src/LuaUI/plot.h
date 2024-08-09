@@ -341,7 +341,7 @@ class Curve {
     // clang-format off
   /*! \fn set_line_width(number pixel);
     \brief Sets the width of the curve.
-    \param color Color.
+    \param pixel line width.
     \par examples:
     \code
         local plot = Ui.Plot.new()
@@ -601,6 +601,8 @@ class Plot : public QObject, public UI_widget {
     QPushButton *export_button;
     std::string *device_string;
     struct Plot_export_data *plot_data;
+    ScriptEngine *scriptengine;
+    friend void export_plot(QwtPlot *plot, Plot_export_data &plot_data, QPushButton *export_button);
 
     friend class Curve;
     friend struct Zoomer_controller;
