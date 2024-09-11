@@ -41,8 +41,8 @@ bool ComportCommunicationDevice::connect(const QMap<QString, QVariant> &portinfo
         this->portinfo = portinfo_;
         assert(portinfo_.contains(HOST_NAME_TAG));
         assert(portinfo_.contains(BAUD_RATE_TAG));
-        assert(portinfo_[HOST_NAME_TAG].type() == QVariant::String);
-        assert(portinfo_[BAUD_RATE_TAG].type() == QVariant::Int);
+        assert(portinfo_[HOST_NAME_TAG].metaType().id() == QMetaType::QString);
+        assert(portinfo_[BAUD_RATE_TAG].metaType().id() == QMetaType::Int);
 
         //    qDebug() << QString("opening: ") + portinfo_[HOST_NAME_TAG].toString();
         port.setPortName(portinfo_[HOST_NAME_TAG].toString());
@@ -66,12 +66,12 @@ bool ComportCommunicationDevice::connect(const QMap<QString, QVariant> &portinfo
         if (result) {
             QString protocol_name = portinfo_[TYPE_NAME_TAG].toString();
             QString text;
-            if (protocol_name.count()) {
+            if (protocol_name.size()) {
                 text = protocol_name + ", ";
             }
             text += portinfo_[HOST_NAME_TAG].toString() + ", bd: " + portinfo_[BAUD_RATE_TAG].toString();
             auto ba = QByteArray();
-            ba.append(text);
+            ba.append(text.toUtf8());//ist utf8 das was wir wollen?
             emit connected(ba);
         } else {
             qDebug() << QString("could not open ") + portinfo_[HOST_NAME_TAG].toString();
@@ -139,7 +139,7 @@ bool ComportCommunicationDevice::waitReceived(Duration timeout, std::string esca
     do {
         QThread::currentThread()->usleep(100);
         try_read(inbuffer, port);
-        if (inbuffer.indexOf(QString::fromStdString(escape_characters)) > -1) {
+        if (inbuffer.indexOf(QString::fromStdString(escape_characters).toUtf8()) > -1) {
             emit received(inbuffer);
             escape_found = true;
             QString in_str{inbuffer};
@@ -184,7 +184,7 @@ void ComportCommunicationDevice::close() {
         //qDebug() << QString("closing: ") + portinfo[HOST_NAME_TAG].toString();
         port.close();
         QByteArray ar;
-        ar.append(portinfo[HOST_NAME_TAG].toString());
+        ar.append(portinfo[HOST_NAME_TAG].toString().toUtf8());
         emit disconnected(ar);
     });
 }

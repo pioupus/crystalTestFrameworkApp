@@ -19,7 +19,7 @@ DeviceMetaDataApprovedState DeviceMetaDataDetail::get_approved_state() {
     if (locked) {
         return DeviceMetaDataApprovedState::Locked;
     }
-    if ((QDateTime().currentDateTime() > QDateTime(expery_date)) && (expery_date.isValid())) {
+    if ((QDateTime().currentDateTime() > QDateTime(expery_date, QTime(0,0) )) && (expery_date.isValid())) {
         return DeviceMetaDataApprovedState::Expired;
     }
 

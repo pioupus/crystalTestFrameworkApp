@@ -102,7 +102,7 @@ double LineEdit::get_date() const {
     if (entermode == LineEdit_Entermode::TextMode) {
         throw std::runtime_error(QString("LineEdit:get_date is not available in Textmode.").toStdString());
     }
-    QDateTime date_(date_edit->date());
+    QDateTime date_(date_edit->date(), QTime(0,0));
     return date_.toSecsSinceEpoch();
 }
 

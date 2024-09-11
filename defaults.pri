@@ -2,8 +2,8 @@ CONFIG += c++17
 CONFIG += strict_c++
 QMAKE_CXXFLAGS += -std=c++17
 
-QT = gui core network serialport xml svg
-QT += script sql printsupport
+QT = gui core network serialport xml svg qml
+QT += sql printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -21,9 +21,11 @@ win32 {
 	CONFIG(debug, debug|release) {
 		LIBS += -lqwtd
 		LIBS += -L$$PWD/libs/LimeReport/build/$${QT_VERSION}/win32/debug/lib
+                LIBS += -L$$PWD/libs/LimeReport/build/$${QT_VERSION}/win64/debug/lib
 	} else {
 		LIBS += -lqwt
 		LIBS += -L$$PWD/libs/LimeReport/build/$${QT_VERSION}/win32/release/lib
+                LIBS += -L$$PWD/libs/LimeReport/build/$${QT_VERSION}/win64/release/lib
 	}
 	equals(GCC_MACHINE,  x86_64-w64-mingw32){
 		LIBS += -L$$PWD/libs/luasol/win64

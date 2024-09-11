@@ -29,7 +29,7 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QList>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QString>
 #include <QStringList>
 

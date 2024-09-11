@@ -220,27 +220,27 @@ class ReportTableLink {
 class ReportTableIndex {
     public:
     void add_new_value_row_index_pair(int field_key, const QVariant &value, int row_index) {
-        QMap<QVariant, int> &index_to_treat = indexes_m[field_key];
-        index_to_treat.insertMulti(value, row_index);
+        auto &index_to_treat = indexes_m[field_key];
+        index_to_treat.insert(value, row_index);
     }
 
     void remove_row_index_from_index(const QMap<int, QVariant> &values, int row_index) {
-        for (int field_key : values.uniqueKeys()) {
-            QMap<QVariant, int> &index_to_treat = indexes_m[field_key];
+        for (int field_key : values.keys()) {
+            QMultiMap<QVariant, int> &index_to_treat = indexes_m[field_key];
             const QVariant &value = values[field_key];
             QList<int> possible_row_keys = index_to_treat.values(value);
             possible_row_keys.removeAll(row_index);
             index_to_treat.remove(value);
             for (int survived_row_keys : possible_row_keys) {
-                index_to_treat.insertMulti(value, survived_row_keys);
+                index_to_treat.insert(value, survived_row_keys);
             }
         }
     }
 
     QList<int> lookup_shadowed_row_indexes(int field_key, const QVariant &value, const QMap<int, ReportTableRow> &rows, bool only_pick_latest_dataset) const {
         assert(shadow_index_valid[field_key]);
-        const QMap<QVariant, int> &index_to_treat = shadow_index_m[field_key];
-        QList<int> result = index_to_treat.values(value);
+        const QMultiMap<QVariant, int> &index_to_treat = shadow_index_m[field_key];
+        auto result = index_to_treat.values(value);
         if (only_pick_latest_dataset && (result.count() > 1)) {
             QDateTime max_val;
             int max_key = result.first();
@@ -260,7 +260,7 @@ class ReportTableIndex {
         if ((only_pick_latest_dataset) && (field_key >= 0)) {
             assert(shadow_index_valid[field_key]);
             QList<int> result;
-            const QMap<QVariant, int> &index_to_treat = shadow_index_m[field_key];
+            const QMultiMap<QVariant, int> &index_to_treat = shadow_index_m[field_key];
             const QList<QVariant> &index_values = index_to_treat.uniqueKeys();
             for (auto &index_value : index_values) {
                 result.append(lookup_shadowed_row_indexes(field_key, index_value, rows, only_pick_latest_dataset));
@@ -268,7 +268,7 @@ class ReportTableIndex {
 
             return result;
         } else {
-            return rows.uniqueKeys();
+            return rows.keys();//uniqueKeys();
         }
     }
 
@@ -284,14 +284,14 @@ class ReportTableIndex {
     }
 
     QList<int> get_indexed_field_keys() const {
-        return indexes_m.uniqueKeys();
+        return indexes_m.keys();//.uniqueKeys();
     }
 
     private:
-    QMap<int, QMap<QVariant, int>>
+    QMap<int, QMultiMap<QVariant, int>>
         indexes_m; //first key points to this_link_field_key and second key is the content of the field. the final value is the row of the table
 
-    QMap<int, QMap<QVariant, int>> shadow_index_m;
+    QMap<int, QMultiMap<QVariant, int>> shadow_index_m;
 
     QMap<int, bool> shadow_index_valid;
 };
@@ -321,7 +321,7 @@ class ReportTable {
 
     friend QDebug operator<<(QDebug stream, const ReportTable &table) {
         QStringList header;
-        for (int &col_key : table.field_name_keys_m.uniqueKeys()) {
+        for (int &col_key : table.field_name_keys_m.keys()) {//uniqueKeys
             header.append(table.field_name_keys_m.value(col_key) + "(" + QString::number(col_key) + ")");
         }
         //header = reduce_path(header);
@@ -330,8 +330,8 @@ class ReportTable {
 
         for (auto const &row : table.rows_m) {
             QStringList row_str;
-            for (int &col_key : table.field_name_keys_m.uniqueKeys()) {
-                auto &col = row.row_m.value(col_key);
+            for (int &col_key : table.field_name_keys_m.keys()) {//uniqueKeys
+                const auto &col = row.row_m.value(col_key);
                 QString col_str;
                 if (col.canConvert<DataEngineDateTime>()) {
                     col_str = col.value<DataEngineDateTime>().str();
@@ -370,7 +370,7 @@ class ReportTable {
     ReportTableLink &get_receiver_link_by_key_other(int other_key);
     void merge(ReportTable *other_table, bool only_pick_latest_dataset);
     ReportTableLink sender_link_m;
-    QMap<int, ReportTableLink> receiver_links_m; //key == field key, the same as ReportTableLink.field_key_this_m
+    QMultiMap<int, ReportTableLink> receiver_links_m; //key == field key, the same as ReportTableLink.field_key_this_m
                                                  //receiver links point to this table
 
     QMap<int, ReportTableRow> rows_m;

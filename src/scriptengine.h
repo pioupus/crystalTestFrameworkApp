@@ -11,11 +11,12 @@
 #include <condition_variable>
 #include <functional>
 #include <memory>
+//#include <QStringList>
 #include <mutex>
 #include <sol.hpp>
 #include <vector>
 
-class QStringList;
+//class QStringList;
 class QSplitter;
 class QPlainTextEdit;
 struct Protocol;

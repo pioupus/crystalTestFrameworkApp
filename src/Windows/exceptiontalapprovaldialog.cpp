@@ -29,7 +29,7 @@ ExceptiontalApprovalDialog::ExceptiontalApprovalDialog(const QList<ExceptionalAp
         QStringList sl;
         sl.append(ff.id);
         QString s = ff.instance_caption;
-        if (s.count()) {
+        if (s.size()) {
             s = "(" + ff.instance_caption + ")";
         }
         sl.append(ff.description + s);
@@ -90,7 +90,7 @@ void ExceptiontalApprovalDialog::on_ExceptiontalApprovalDialog_accepted() {
 void ExceptiontalApprovalDialog::on_buttonBox_accepted() {
     QStringList errors;
     QStringList warnings;
-    if (ui->edt_approved_by->text().count() == 0) {
+    if (ui->edt_approved_by->text().size() == 0) {
         errors.append("No responsible person is specified for an exceptional approval in the approved by field.");
     }
     for (int i = 0; i < ui->tree_failures->topLevelItemCount(); i++) {
