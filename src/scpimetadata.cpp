@@ -51,7 +51,7 @@ void DeviceMetaData::reload(QString file_name) {
 }
 
 DeviceMetaDataGroup DeviceMetaData::query(QString serial_number, QString device_name) const {
-    const bool look_for_serial = serial_number.count();
+    const bool look_for_serial = serial_number.size();
     DeviceMetaDataGroup result{};
 
     for (auto t : device_types) {

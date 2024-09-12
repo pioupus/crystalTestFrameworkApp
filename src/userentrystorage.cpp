@@ -32,7 +32,7 @@ UserEntryCache::~UserEntryCache() {
         QJsonObject obj{};
         obj["cache"] = cache_m;
         obj["script_path"] = script_path_m;
-        obj["touched_unixtime"] = QJsonValue(qint64(QDateTime::currentDateTime().toTime_t()));
+        obj["touched_unixtime"] = QJsonValue(qint64(QDateTime::currentDateTime(). toSecsSinceEpoch()));
 
         QJsonDocument saveDoc(obj);
         QFile saveFile(file_name_m);
@@ -55,7 +55,7 @@ void UserEntryCache::load_storage_for_script(QString script_path, QString dut_id
     file_name_m = script_path;
     QCryptographicHash hash(QCryptographicHash::Sha256);
     QByteArray ba;
-    ba.append(script_path);
+    ba.append(script_path.toUtf8());
     hash.addData(QByteArray(ba));
 
     file_name_m = root_path + "/" + hash.result().toHex() + ".json";
@@ -97,7 +97,7 @@ void UserEntryCache::set_value(QString field_name, QString value) {
     auto keys = QStringList{dut_id_m, wildcard};
     for (auto key : keys) {
         cache_m[key].toObject()["content"].toObject()[field_name] = value;
-        cache_m[key].toObject()["touched_unixtime"] = QJsonValue(qint64(QDateTime::currentDateTime().toTime_t()));
+        cache_m[key].toObject()["touched_unixtime"] = QJsonValue(qint64(QDateTime::currentDateTime().toSecsSinceEpoch()));
     }
     modified_m = true;
 }

@@ -701,14 +701,14 @@ std::vector<DeviceRequirements> ScriptEngine::get_device_requirement_list() {
 sol::table ScriptEngine::get_devices(const std::vector<MatchedDevice> &devices) {
     QMultiMap<QString, MatchedDevice> aliased_devices;
     for (auto &device_protocol : devices) {
-        aliased_devices.insertMulti(device_protocol.proposed_alias, device_protocol);
+        aliased_devices.insert(device_protocol.proposed_alias, device_protocol);//insertMulti
     }
     std::vector<sol::object> no_alias_device_list;
     std::map<QString, std::vector<sol::object>> aliased_devices_result;
 
     //creating devices..
     auto aliases = aliased_devices.keys();
-    for (auto alias : aliases) {
+    for (const auto &alias : aliases) {
         auto values = aliased_devices.values(alias);
         std::vector<sol::object> device_list;
         for (const auto &device_protocol : values) {

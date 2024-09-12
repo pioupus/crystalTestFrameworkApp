@@ -16,7 +16,7 @@ MovingAverage::~MovingAverage() {}
 
 void MovingAverage::append(double value) {
     m_average_storage[QDateTime::currentMSecsSinceEpoch()] = value;
-    auto keys = m_average_storage.uniqueKeys();
+    auto keys = m_average_storage.keys();
     for (auto k : keys) {
         if (k < QDateTime::currentMSecsSinceEpoch() - m_average_time_ms) {
             m_average_storage.remove(k);

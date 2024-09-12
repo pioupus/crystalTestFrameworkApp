@@ -293,7 +293,7 @@ void DeviceMatcher::make_treeview() {
     for (auto d : devices_to_match) {
         QTreeWidgetItem *tv = new QTreeWidgetItem(ui->tree_required);
         tv->setText(0, d.device_requirement.device_names.join("/"));
-        if (d.device_requirement.device_names.join("").count() == 0) {
+        if (d.device_requirement.device_names.join("").size() == 0) {
             tv->setText(0, d.device_requirement.protocol_name);
         } else if (d.device_requirement.device_names.join("") == "*") {
             tv->setText(0, d.device_requirement.protocol_name);

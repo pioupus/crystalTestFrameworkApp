@@ -5,6 +5,7 @@
 #include "console.h"
 #include "scriptengine.h"
 
+#include <QRegularExpression>
 #include <QDebug>
 #include <QPlainTextEdit>
 #include <QSettings>
@@ -116,12 +117,15 @@ void TestDescriptionLoader::load_description() {
     bool error_occured = false;
     try {
         for (const auto &message : MainWindow::validate_script(file_path)) {
-            QRegExp regex{R"((.*):(\d+):\d+-\d+:(.*))"};
-            if (not regex.exactMatch(message)) {
+            QRegularExpression regex{QRegularExpression::anchoredPattern(R"((.*):(\d+):\d+-\d+:(.*))")};
+            assert(regex.isValid());
+            //regex still works as intended?
+            auto regmatch = regex.match(message);
+            if (not regmatch.hasMatch()) {
                 qDebug() << "Failed parsing message" << message;
                 continue;
             }
-            auto message_parts = regex.capturedTexts();
+            auto message_parts = regmatch.capturedTexts();
             auto path = std::move(message_parts[1]);
             auto line = std::move(message_parts[2]);
             auto diagnostic = std::move(message_parts[3]);

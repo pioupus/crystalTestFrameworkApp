@@ -156,7 +156,7 @@ DataEngineInput::DataEngineInput(UI_container *parent_, ScriptEngine *script_eng
 		ExceptionalApprovalDB ea_db{QSettings{}.value(Globals::path_to_excpetional_approval_db_key, "").toString()};
 		if (data_engine->do_exceptional_approval(ea_db, field_id, MainWindow::mw)) {
 			if ((field_type == FieldType::Numeric) || (field_type == FieldType::String)) {
-				if (lineedit->text().count() == 0) {
+                if (lineedit->text().size() == 0) {
 					dont_save_result_to_de = true;
 				}
             }

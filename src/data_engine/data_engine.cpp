@@ -169,7 +169,7 @@ QStringList Data_engine::get_instance_count_names() {
     QStringList result;
     for (auto &section : sections.sections) {
         auto name = section.get_instance_count_name();
-        if ((name.count()) && !result.contains(name)) {
+        if ((name.size()) && !result.contains(name)) {
             result.append(name);
         }
     }
@@ -552,11 +552,11 @@ void DataEngineSection::delete_unmatched_variants(const QMap<QString, QList<QVar
 }
 
 void DataEngineSection::delete_all_but_biggest_variants() {
-    int instance_index = 0;
+   // int instance_index = 0;
     for (auto &instance : instances) {
         assert(instance_count);
         instance.delete_all_but_biggest_variants();
-        instance_index++;
+   //     instance_index++;
     }
 }
 
@@ -1228,14 +1228,14 @@ bool DependencyValue::is_matching(const QVariant &test_value) const {
     switch (match_style) {
         case MatchExactly: {
             bool result = true;
-            if ((test_value.type() == QVariant::Double) && (match_exactly.type() == QVariant::Double)) {
+            if ((test_value.typeId() == QMetaType::Double) && (match_exactly.typeId() == QMetaType::Double)) {
                 bool ok_a, ok_b;
                 double num_val_a = test_value.toDouble(&ok_a);
                 double num_val_b = match_exactly.toDouble(&ok_b);
                 if (std::round(num_val_a * PRECISION_REDUCTION) == std::round(num_val_b * PRECISION_REDUCTION)) {
                     result = true;
                 }
-            } else if ((test_value.type() == QVariant::Bool) && (match_exactly.type() == QVariant::Bool)) {
+            } else if ((test_value.typeId() == QMetaType::Bool) && (match_exactly.typeId() == QMetaType::Bool)) {
                 result = test_value.toBool() == match_exactly.toBool();
             } else {
                 result = match_exactly == test_value;
@@ -1340,13 +1340,13 @@ void DependencyValue::from_string(const QString &str) {
         } else {
             match_style = Match_style::MatchExactly;
         }
-        match_exactly.setValue<QString>(str);
+        match_exactly.setValue(str);//<QString>
     }
 }
 
 void DependencyValue::from_number(const double &number) {
     match_style = Match_style::MatchExactly;
-    match_exactly.setValue<double>(number);
+    match_exactly.setValue(number);//<double>
     serialised_string = QString::number(number);
     range_low_including = 0;
     range_high_excluding = 0;
@@ -1354,7 +1354,7 @@ void DependencyValue::from_number(const double &number) {
 
 void DependencyValue::from_bool(const bool &boolean) {
     match_style = Match_style::MatchExactly;
-    match_exactly.setValue<bool>(boolean);
+    match_exactly.setValue(boolean);//<bool>
     if (boolean) {
         serialised_string = "true";
     } else {
@@ -1948,9 +1948,9 @@ void Data_engine::save_to_json(QString filename) {
 
     QJsonObject jo_dependency;
     const QMap<QString, QList<QVariant>> dependency_tags = sections.get_dependancy_tags();
-    for (auto k : dependency_tags.keys()) {
+    for (const auto &k : dependency_tags.keys()) {
         QJsonArray ja;
-        auto values = dependency_tags.values(k);
+        auto values = dependency_tags.value(k);
         for (auto v : values) {
             ja.append(QJsonValue::fromVariant(v));
         }
@@ -2107,7 +2107,7 @@ bool Data_engine::do_exceptional_approval(ExceptionalApprovalDB &ea_db, QString 
 
 void Data_engine::do_exceptional_approvals(ExceptionalApprovalDB &ea_db, QWidget *parent) {
     QList<FailedField> failed_fields;
-    int instance_id_counter = 1;
+  //  int instance_id_counter = 1;
     for (const DataEngineSection &section : sections.sections) {
         for (const DataEngineInstance &instance : section.instances) {
             auto variant = instance.get_variant();
@@ -2121,7 +2121,7 @@ void Data_engine::do_exceptional_approvals(ExceptionalApprovalDB &ea_db, QWidget
                 }
             }
 
-            instance_id_counter++;
+          //  instance_id_counter++;
         }
     }
     do_exceptional_approval_(ea_db, failed_fields, parent);
@@ -3053,7 +3053,7 @@ void Data_engine::replace_database_filename(const std::string &source_form_path,
         xml_in.readNext();
 
         if (xml_in.isStartElement()) {
-            if (xml_in.name() == "databaseName") {
+            if (xml_in.name() == L"databaseName") {
                 XML{"databaseName"}.attribute("Type", "QString").value(QString::fromStdString(database_path));
                 xml_in.skipCurrentElement();
                 continue;
@@ -3111,7 +3111,7 @@ void Data_engine::add_sources_to_form(QString data_base_path, const QList<PrintO
             assert(variant);
 
             QStringList field_names;
-            if (section_item.field_name.count()) {
+            if (section_item.field_name.size()) {
                 field_names.append(section_item.field_name);
             } else {
                 for (const std::unique_ptr<DataEngineDataEntry> &entry : variant->data_entries) {
@@ -3343,7 +3343,7 @@ void NumericTolerance::str_to_num(QString str_in, double &number, ToleranceType 
             break;
         } else if (str_in.startsWith(sign) && (sign != "")) {
             sign_error = false;
-            str_in.remove(0, sign.count());
+            str_in.remove(0, sign.size());
             break;
         }
     }
@@ -3353,7 +3353,7 @@ void NumericTolerance::str_to_num(QString str_in, double &number, ToleranceType 
     } else {
         if (str_in.endsWith("%")) {
             tol_type = ToleranceType::Percent;
-            str_in.remove(str_in.count() - 1, 1);
+            str_in.remove(str_in.size() - 1, 1);
         } else {
             tol_type = ToleranceType::Absolute;
         }
@@ -3375,10 +3375,10 @@ QString NumericTolerance::num_to_str(double number, ToleranceType tol_type) cons
     numStr = QString::number(number, 'f', 10);
     if (numStr.indexOf(".") > 0) {
         while (numStr.endsWith("0")) {
-            numStr.remove(numStr.count() - 1, 1);
+            numStr.remove(numStr.size() - 1, 1);
         }
         if (numStr.endsWith(".")) {
-            numStr.remove(numStr.count() - 1, 1);
+            numStr.remove(numStr.size() - 1, 1);
         }
     }
     if (tol_type == ToleranceType::Percent) {
@@ -4698,7 +4698,7 @@ DataEngineDateTime::DataEngineDateTime(QString text) {
 }
 
 DataEngineDateTime::DataEngineDateTime(QDate date) {
-    dt_m = QDateTime(date);
+    dt_m = QDateTime(date,QTime(0,0));
     precision_m = DateTimeFormatPrecision::date;
 }
 

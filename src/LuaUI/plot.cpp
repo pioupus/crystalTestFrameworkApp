@@ -1,6 +1,6 @@
 ///\cond HIDDEN_SYMBOLS
 #include "plot.h"
-#include "CommunicationDevices/communicationdevice.h"
+//#include "CommunicationDevices/communicationdevice.h"
 #include "Windows/mainwindow.h"
 #include "config.h"
 #include "qt_util.h"
@@ -9,6 +9,7 @@
 #include "ui_container.h"
 #include "util.h"
 
+#include <QDir>
 #include <QAction>
 #include <QDateTime>
 #include <QDebug>

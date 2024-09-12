@@ -40,6 +40,7 @@
 #include <QStringList>
 #include <QTimer>
 #include <QTreeWidgetItem>
+#include <QStandardPaths>
 #include <QUrl>
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>

@@ -51,7 +51,7 @@ EnvironmentVariables::EnvironmentVariables(QString filename) {
     QJsonObject j_obj = j_doc.object();
     const auto keys = j_obj.keys();
 
-    for (auto key : keys) {
+    for (const auto &key : keys) {
         auto value = j_obj[key];
         if (value.isDouble()) {
             QVariant var{value.toDouble()};
@@ -69,12 +69,12 @@ EnvironmentVariables::EnvironmentVariables(QString filename) {
 }
 
 void EnvironmentVariables::load_to_lua(sol::state *lua) {
-    for (auto key : variables.keys()) {
-        if (variables[key].type() == QVariant::Bool) {
+    for (const auto &key : variables.keys()) {
+        if (variables[key].typeId() == QMetaType::Bool) {
             (*lua)[key.toStdString()] = variables[key].toBool();
-        } else if (variables[key].type() == QVariant::Double) {
+        } else if (variables[key].typeId() == QMetaType::Double) {
             (*lua)[key.toStdString()] = variables[key].toDouble();
-        } else if (variables[key].type() == QVariant::String) {
+        } else if (variables[key].typeId() == QMetaType::QString) {
             (*lua)[key.toStdString()] = variables[key].toString().toStdString();
         } else {
             assert(0);

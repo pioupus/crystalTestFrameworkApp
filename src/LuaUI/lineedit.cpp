@@ -176,11 +176,11 @@ bool PatternCheck::is_input_matching_to_pattern(const QString &string_under_test
             return false;
         }
         QString week_str = sl[1];
-        int week_str_count = week_str.count();
+        int week_str_count = week_str.size();
         if ((week_str_count != 2) && (week_str_count != 3)) {
             return false;
         }
-        if (week_str.count() == 3) {
+        if (week_str.size() == 3) {
             if (!week_str.right(1)[0].isLetter()) {
                 return false;
             }

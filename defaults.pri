@@ -15,7 +15,7 @@ QMAKE_CXXFLAGS += -isystem $$PWD/libs/luasol/include
 
 win32 {
 	QWT_DIR = $$PWD/libs/qwt
-	QMAKE_CXXFLAGS += -isystem $$QWT_DIR/qwt-6.1.3/src
+        QMAKE_CXXFLAGS += -isystem $$QWT_DIR/qwt-6.3.0/src
 	LIBS += -L$$QWT_DIR/build_qwt/lib
 
 	CONFIG(debug, debug|release) {

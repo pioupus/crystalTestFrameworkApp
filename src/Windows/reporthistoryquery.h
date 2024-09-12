@@ -220,26 +220,30 @@ class ReportTableLink {
 class ReportTableIndex {
     public:
     void add_new_value_row_index_pair(int field_key, const QVariant &value, int row_index) {
-        auto &index_to_treat = indexes_m[field_key];
-        index_to_treat.insert(value, row_index);
+        assert(value.canConvert<QString>()); // we use Qstring rather the QVariant because QVariant does not contain the < operator anymore required by qmap. therefore we convert to string and use this as the index
+        QMultiMap<QString, int> &index_to_treat = indexes_m[field_key];
+        index_to_treat.insert(value.toString(), row_index);
     }
 
     void remove_row_index_from_index(const QMap<int, QVariant> &values, int row_index) {
         for (int field_key : values.keys()) {
-            QMultiMap<QVariant, int> &index_to_treat = indexes_m[field_key];
+            QMultiMap<QString, int> &index_to_treat = indexes_m[field_key];
             const QVariant &value = values[field_key];
-            QList<int> possible_row_keys = index_to_treat.values(value);
+            assert(value.canConvert<QString>());
+
+            QList<int> possible_row_keys = index_to_treat.values(value.toString());
             possible_row_keys.removeAll(row_index);
-            index_to_treat.remove(value);
+            index_to_treat.remove(value.toString());
             for (int survived_row_keys : possible_row_keys) {
-                index_to_treat.insert(value, survived_row_keys);
+                index_to_treat.insert(value.toString(), survived_row_keys);
             }
         }
     }
 
-    QList<int> lookup_shadowed_row_indexes(int field_key, const QVariant &value, const QMap<int, ReportTableRow> &rows, bool only_pick_latest_dataset) const {
+    QList<int> lookup_shadowed_row_indexes(int field_key, const QString &value, const QMap<int, ReportTableRow> &rows, bool only_pick_latest_dataset) const {
         assert(shadow_index_valid[field_key]);
-        const QMultiMap<QVariant, int> &index_to_treat = shadow_index_m[field_key];
+        const QMultiMap<QString, int> &index_to_treat = shadow_index_m[field_key];
+       // assert(value.canConvert<QString>());
         auto result = index_to_treat.values(value);
         if (only_pick_latest_dataset && (result.count() > 1)) {
             QDateTime max_val;
@@ -260,8 +264,8 @@ class ReportTableIndex {
         if ((only_pick_latest_dataset) && (field_key >= 0)) {
             assert(shadow_index_valid[field_key]);
             QList<int> result;
-            const QMultiMap<QVariant, int> &index_to_treat = shadow_index_m[field_key];
-            const QList<QVariant> &index_values = index_to_treat.uniqueKeys();
+            const QMultiMap<QString, int> &index_to_treat = shadow_index_m[field_key];
+            const QList<QString> &index_values = index_to_treat.uniqueKeys();
             for (auto &index_value : index_values) {
                 result.append(lookup_shadowed_row_indexes(field_key, index_value, rows, only_pick_latest_dataset));
             }
@@ -288,10 +292,10 @@ class ReportTableIndex {
     }
 
     private:
-    QMap<int, QMultiMap<QVariant, int>>
+    QMap<int, QMultiMap<QString, int>>
         indexes_m; //first key points to this_link_field_key and second key is the content of the field. the final value is the row of the table
 
-    QMap<int, QMultiMap<QVariant, int>> shadow_index_m;
+    QMap<int, QMultiMap<QString, int>> shadow_index_m;
 
     QMap<int, bool> shadow_index_valid;
 };
@@ -321,7 +325,7 @@ class ReportTable {
 
     friend QDebug operator<<(QDebug stream, const ReportTable &table) {
         QStringList header;
-        for (int &col_key : table.field_name_keys_m.keys()) {//uniqueKeys
+        for (const int &col_key : table.field_name_keys_m.keys()) {//uniqueKeys
             header.append(table.field_name_keys_m.value(col_key) + "(" + QString::number(col_key) + ")");
         }
         //header = reduce_path(header);
@@ -330,7 +334,7 @@ class ReportTable {
 
         for (auto const &row : table.rows_m) {
             QStringList row_str;
-            for (int &col_key : table.field_name_keys_m.keys()) {//uniqueKeys
+            for (const int &col_key : table.field_name_keys_m.keys()) {//uniqueKeys
                 const auto &col = row.row_m.value(col_key);
                 QString col_str;
                 if (col.canConvert<DataEngineDateTime>()) {
@@ -355,7 +359,7 @@ class ReportTable {
 
     bool field_exists(int field_name_key) const;
     void integrate_sending_tables(bool only_pick_latest_dataset);
-    const QMap<int, ReportTableLink> &get_receiver_links() const;
+    const QMultiMap<int, ReportTableLink> &get_receiver_links() const;      //receiver_links_m is really intended as multimap
 
     private:
     void remove_rows(QList<int> indexes);
@@ -372,6 +376,7 @@ class ReportTable {
     ReportTableLink sender_link_m;
     QMultiMap<int, ReportTableLink> receiver_links_m; //key == field key, the same as ReportTableLink.field_key_this_m
                                                  //receiver links point to this table
+                                                //uses insert multi. Means: it is really a multimap
 
     QMap<int, ReportTableRow> rows_m;
     QMap<int, QString> field_name_keys_m; //fields which could possibly exist
@@ -515,14 +520,14 @@ class MyTableWidgetItem : public QTableWidgetItem {
     bool operator<(const QTableWidgetItem &other) const {
         const QVariant &my_dt = data(Qt::UserRole);
         const QVariant &other_dt = other.data(Qt::UserRole);
-        if (my_dt.type() == other_dt.type()) {
-            if (my_dt.type() == QVariant::Int) {
+        if (my_dt.typeId() == other_dt.typeId()) {
+            if (my_dt.typeId() == QMetaType::Int) {
                 return my_dt.toInt() < other_dt.toInt();
-            } else if (my_dt.type() == QVariant::Double) {
+            } else if (my_dt.typeId() == QMetaType::Double) {
                 return my_dt.toDouble() < other_dt.toDouble();
             } else if (my_dt.canConvert<DataEngineDateTime>()) {
                 return my_dt.value<DataEngineDateTime>().dt() < other_dt.value<DataEngineDateTime>().dt();
-            } else if (my_dt.type() == QVariant::String) {
+            } else if (my_dt.typeId() == QMetaType::QString) {
                 return my_dt.toString() < other_dt.toString();
             }
         }

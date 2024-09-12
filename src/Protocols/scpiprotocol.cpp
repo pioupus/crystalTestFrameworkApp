@@ -111,7 +111,7 @@ QStringList SCPIProtocol::parse_scpi_answers() {
     incoming_data.clear();
     answer_string = answer_string.trimmed();
     result = answer_string.split(QString::fromStdString(escape_characters));
-    if (answer_string.count()) {
+    if (answer_string.size()) {
         //  qDebug() << result;
     }
     return result;
@@ -374,7 +374,7 @@ double SCPIProtocol::get_num_param(std::string request, std::string argument) {
             s = s.trimmed();
             bool ok = false;
             double result = s.toDouble(&ok);
-            if (ok && s.count()) {
+            if (ok && s.size()) {
                 values.append(result);
             }
         }

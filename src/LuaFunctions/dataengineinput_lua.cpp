@@ -275,7 +275,7 @@ Data_engine_handle::~Data_engine_handle() {
     try {
         data_engine->do_exceptional_approvals(ea_db, MainWindow::mw);
         data_engine->save_actual_value_statistic();
-        if (data_engine_pdf_template_path.count() and data_engine_auto_dump_path.count()) {
+        if (data_engine_pdf_template_path.size() and data_engine_auto_dump_path.size()) {
             QFileInfo fi(data_engine_auto_dump_path);
             QString suffix = fi.completeSuffix();
             if (suffix == "") {
@@ -292,14 +292,14 @@ Data_engine_handle::~Data_engine_handle() {
             try {
                 data_engine->generate_pdf(data_engine_pdf_template_path.toStdString(), target_filename + ".pdf");
                 data_engine->set_log_file(target_filename + "_log.txt");
-                if (additional_pdf_path.count()) {
+                if (additional_pdf_path.size()) {
                     QFile::copy(QString::fromStdString(target_filename), additional_pdf_path);
                 }
             } catch (const DataEngineError &dee) {
                 Utility::promised_thread_call(MainWindow::mw, [this, &dee] { console->error() << dee.what(); });
             }
         }
-        if (data_engine_auto_dump_path.count()) {
+        if (data_engine_auto_dump_path.size()) {
             QFileInfo fi(data_engine_auto_dump_path);
             QString suffix = fi.completeSuffix();
             if (suffix == "") {

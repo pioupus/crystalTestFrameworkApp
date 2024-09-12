@@ -608,7 +608,7 @@ void DeviceWorker::connect_to_device_console(QPlainTextEdit *console, Communicat
                 bool is_connect_signal = signal == &CommunicationDevice::connected;
                 bool is_disconnect_signal = signal == &CommunicationDevice::disconnected;
                 if (is_connect_signal) {
-                    if (display_text.count()) {
+                    if (display_text.size()) {
                         display_text = "connected(" + display_text + ")";
                     } else {
                         display_text = "connected";
@@ -616,7 +616,7 @@ void DeviceWorker::connect_to_device_console(QPlainTextEdit *console, Communicat
                     is_human_readable = true;
                 }
                 if (is_disconnect_signal) {
-                    if (display_text.count()) {
+                    if (display_text.size()) {
                         display_text = "disconnected(" + display_text + ")";
                     } else {
                         display_text = "disconnected";
@@ -624,7 +624,7 @@ void DeviceWorker::connect_to_device_console(QPlainTextEdit *console, Communicat
                     is_human_readable = true;
                 }
                 auto display_data = QByteArray();
-                display_data.append(display_text);
+                display_data.append(display_text.toUtf8());
                 MainWindow::mw->append_html_to_console(
 
                     (fat ? fat_html : normal_html)

@@ -26,14 +26,14 @@ SG04CountProtocol::SG04CountProtocol(CommunicationDevice &device, DeviceProtocol
 #if 1
     connection = QObject::connect(&device, &CommunicationDevice::received, [&device, this](const QByteArray &data) {
         incoming_data.append(data);
-        if (incoming_data.count() > 3) {
+        if (incoming_data.size() > 3) {
             for (int searching_offset = 0; searching_offset < 4; searching_offset++) {
                 int offset = searching_offset;
                 uint8_t package[4];
                 bool ok = true;
                 bool right_offset_found = false;
                 while (ok) {
-                    if (incoming_data.count() < 4 + offset) {
+                    if (incoming_data.size() < 4 + offset) {
                         break;
                     }
                     for (int i = 0; i < 4; i++) {

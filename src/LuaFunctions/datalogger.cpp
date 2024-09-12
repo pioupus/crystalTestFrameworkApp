@@ -68,10 +68,10 @@ void DataLogger::append_data(sol::table data_record) {
             numStr = QString::number(field.second.as<double>(), 'f', 10);
             if (numStr.indexOf(".") > 0) {
                 while (numStr.endsWith("0")) {
-                    numStr.remove(numStr.count() - 1, 1);
+                    numStr.remove(numStr.size() - 1, 1);
                 }
                 if (numStr.endsWith(".")) {
-                    numStr.remove(numStr.count() - 1, 1);
+                    numStr.remove(numStr.size() - 1, 1);
                 }
             }
             record.append(numStr);

@@ -62,7 +62,7 @@ static void set_description_data(Device_data &dd, const RPCRuntimeDecodedParam &
                 dd.githash = QString::number(param_value, 16);
             } else if (parameter_name == "gitDate_unix") {
                 const auto &param_value = param.as_integer();
-                dd.gitDate_unix = QDateTime::fromTime_t(param_value).toString();
+                dd.gitDate_unix = QDateTime::fromSecsSinceEpoch(param_value).toString();
             } else if (parameter_name == "serialnumber") {
                 const auto &param_value = param.as_integer();
                 dd.serialnumber = QString::number(param_value);

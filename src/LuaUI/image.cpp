@@ -20,18 +20,18 @@ class Aspect_ratio_label : public QLabel {
 		assert(MainWindow::gui_thread == QThread::currentThread());
     }
     bool hasHeightForWidth() const override {
-		return pixmap();
+        return !pixmap().isNull();
     }
     int heightForWidth(int width) const override {
 		if (not pixmap()) {
 			return 0;
 		}
-		const auto size = pixmap()->size();
+        const auto size = pixmap().size();
 		return width * size.height() / size.width();
     }
 	QSize sizeHint() const override {
-		if (pixmap()) {
-			return pixmap()->size();
+        if (!pixmap().isNull()) {
+            return pixmap().size();
 		}
 		return {0, 0};
 	}
@@ -39,7 +39,7 @@ class Aspect_ratio_label : public QLabel {
 		if (not pixmap()) {
 			return {0, 0};
 		}
-		const auto min_width = std::min(100, pixmap()->size().width());
+        const auto min_width = std::min(100, pixmap().size().width());
 		return {heightForWidth(min_width), min_width};
 	}
     void setPixmap(const QPixmap &pixmap) {
@@ -67,8 +67,9 @@ void Image::load_image_file(const std::string &path_to_image) {
 }
 
 void Image::set_maximum_height(int height) {
-	if (auto pixmap = label->pixmap()) {
-		const auto size = pixmap->size();
+    if (!label->pixmap().isNull()){
+       const auto &pixmap = label->pixmap();
+        const auto size = pixmap.size();
 		const auto width = height * size.width() / size.height();
 		label->setMaximumSize(width, height);
 	} else {
@@ -77,7 +78,7 @@ void Image::set_maximum_height(int height) {
 }
 
 void Image::set_maximum_width(int width) {
-	if (label->pixmap()) {
+    if (!label->pixmap().isNull()) {
 		label->setMaximumSize(width, label->heightForWidth(width));
 	} else {
 		qDebug() << "Warning: Setting maximum size for image before loading an image has no effect";
