@@ -33,7 +33,7 @@ static bool is_valid_baudrate(QSerialPort::BaudRate baudrate) {
         case QSerialPort::Baud19200:
         case QSerialPort::Baud115200:
             return true;
-        case QSerialPort::UnknownBaud:
+        default:
             return false;
     }
     return false;

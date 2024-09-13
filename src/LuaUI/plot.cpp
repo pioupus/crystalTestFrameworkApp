@@ -3,6 +3,7 @@
 //#include "CommunicationDevices/communicationdevice.h"
 #include "Windows/mainwindow.h"
 #include "config.h"
+#include "qpen.h"
 #include "qt_util.h"
 #include "scriptengine.h"
 #include "testrunner.h"
@@ -17,6 +18,7 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QMouseEvent>
+#include <QPainter>
 #include <QPixmap>
 #include <QPushButton>
 #include <QSettings>
@@ -28,12 +30,15 @@
 #include <qwt_date_scale_draw.h>
 #include <qwt_date_scale_engine.h>
 #include <qwt_picker_machine.h>
+#include <qwt_plot_picker.h>
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_marker.h>
 #include <qwt_plot_picker.h>
 #include <qwt_plot_zoomer.h>
 #include <qwt_scale_draw.h>
+#include <qwt_scale_map.h>
+#include <qwt_text.h>
 
 using namespace std::chrono;
 
@@ -365,7 +370,7 @@ void Curve::set_color(const Color &color) {
 }
 
 void Curve::set_line_width(double pixel) {
-    auto pen = curve->pen();
+    QPen pen = curve->pen();
     pen.setWidth(pixel);
     curve->setPen(pen);
 }
@@ -415,7 +420,7 @@ Curve_data &Curve::curve_data() {
     return static_cast<Curve_data &>(*curve->data());
 }
 
-class TimePicker : public QwtPlotPicker {
+struct TimePicker : public QwtPlotPicker {
     public:
     TimePicker(QWidget *parent)
         : QwtPlotPicker{parent} {}
@@ -524,7 +529,7 @@ struct Zoomer_controller : QObject {
                     if (mouse_event->modifiers() == Qt::KeyboardModifier::NoModifier) {
                         x_scaling = plot()->canvasMap(zoomer->xAxis());
                         y_scaling = plot()->canvasMap(zoomer->yAxis());
-                        const auto mouse_drag_start_coordinate = mouse_event->globalPos();
+                        const auto mouse_drag_start_coordinate = mouse_event->globalPosition().toPoint();
                         plot_drag_start_coordinate = mouse_coords_to_plot_coords(mouse_drag_start_coordinate);
                         plot_start_coordinate = zoomer->zoomRect().topLeft();
                         if (parent_plot) {
@@ -591,7 +596,7 @@ struct Zoomer_controller : QObject {
                         }
                     });
                     menu.addAction(&action_run);
-                    menu.exec(mouse_event->globalPos());
+                    menu.exec(mouse_event->globalPosition().toPoint());
                     return true;
                 }
                 if (mouse_event->button() == Qt::MouseButton::MiddleButton) {
@@ -602,7 +607,7 @@ struct Zoomer_controller : QObject {
             case QEvent::MouseMove: {
                 const auto mouse_event = static_cast<QMouseEvent *>(event);
                 if (mouse_event->buttons() == Qt::MouseButton::LeftButton && mouse_event->modifiers() == Qt::KeyboardModifier::NoModifier) {
-                    const auto mouse_plot_coords = mouse_coords_to_plot_coords(mouse_event->globalPos());
+                    const auto mouse_plot_coords = mouse_coords_to_plot_coords(mouse_event->globalPosition().toPoint());
                     auto zoom_rect = zoomer->zoomRect();
                     zoom_rect.moveTo(plot_start_coordinate + plot_drag_start_coordinate - mouse_plot_coords);
                     zoomer->zoom(zoom_rect);

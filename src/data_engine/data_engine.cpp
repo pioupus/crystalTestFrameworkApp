@@ -1886,13 +1886,14 @@ bool Data_engine::generate_pdf(const std::string &form, const std::string &desti
 
 static void db_exec(QSqlDatabase &db, QString query) {
     //    qDebug() << query;
-    auto instance = db.exec(query);
-    if (instance.lastError().isValid()) {
-        qDebug() << instance.lastError().text();
+    auto sql_query = QSqlQuery(db);
+    sql_query.exec(query);
+    if (sql_query.lastError().isValid()) {
+        qDebug() << sql_query.lastError().text();
         throw DataEngineError(DataEngineErrorNumber::sql_error, QString{"Dataengine: Failed executing query: ''%1''. Error: %2 "
                                                                         "\n\nProbably because database file ''%3'' is opened by "
                                                                         "another program."}
-                                                                    .arg(query, instance.lastError().text(), db.databaseName()));
+                                                                    .arg(query, sql_query.lastError().text(), db.databaseName()));
     }
 }
 
