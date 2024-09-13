@@ -13,6 +13,7 @@
 #include <vector>
 
 class TestRunner;
+class DeviceWorker;
 
 enum class CommunicationDeviceType { COM, TMC, Manual, TCP, UDP, IP };
 

@@ -7,6 +7,7 @@
 #include "qt_util.h"
 #include "scpimetadata.h"
 #include "scriptengine.h"
+#include "Windows/devicematcher.h"
 
 #include <QSemaphore>
 #include <future>
@@ -17,6 +18,7 @@ class MainWindow;
 class QPlainTextEdit;
 class QTreeWidgetItem;
 struct PortDescription;
+
 
 class DeviceWorker : public QObject {
     Q_OBJECT

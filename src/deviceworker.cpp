@@ -7,6 +7,7 @@
 #include "Protocols/scpiprotocol.h"
 #include "Protocols/sg04countprotocol.h"
 #include "Windows/devicematcher.h"
+
 #include "Windows/mainwindow.h"
 #include "config.h"
 #include "console.h"

@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
 
     QTranslator qtTranslator;
-    if (qtTranslator.load(QLocale::system(), "qt", "_", QLibraryInfo::location(QLibraryInfo::TranslationsPath))) {
+    if (qtTranslator.load(QLocale::system(), "qt", "_", QLibraryInfo::path(QLibraryInfo::TranslationsPath))) {
         a.installTranslator(&qtTranslator);
     }
 
