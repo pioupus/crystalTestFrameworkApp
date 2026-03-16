@@ -4,7 +4,7 @@
 #include "lua_functions.h"
 #include "scriptsetup_helper.h"
 #include "ui_container.h"
-
+#include <thread>
 #include <QDir>
 #include <QSettings>
 

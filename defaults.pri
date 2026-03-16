@@ -2,7 +2,7 @@ CONFIG += c++17
 CONFIG += strict_c++
 QMAKE_CXXFLAGS += -std=c++17
 
-QT = gui core network serialport xml svg
+QT = gui core network serialport xml svg qml quick
 QT += script sql printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -11,27 +11,40 @@ GCC_MACHINE = $$system("g++ -dumpmachine")
 message($$GCC_MACHINE)
 
 INCLUDEPATH += $$PWD/src
-QMAKE_CXXFLAGS += -isystem $$PWD/libs/luasol/include
+QMAKE_CXXFLAGS += -isystem $$PWD/libs/luasol/include -Wno-deprecated-declarations
 
 win32 {
-	QWT_DIR = $$PWD/libs/qwt
-	QMAKE_CXXFLAGS += -isystem $$QWT_DIR/qwt-6.1.3/src
-	LIBS += -L$$QWT_DIR/build_qwt/lib
+        QWT_DIR = $$PWD/libs/qwt-6.1.3
+	QMAKE_CXXFLAGS += -isystem $$QWT_DIR/src
+	message($${QT_VERSION})
 
-	CONFIG(debug, debug|release) {
-		LIBS += -lqwtd
-		LIBS += -L$$PWD/libs/LimeReport/build/$${QT_VERSION}/win32/debug/lib
-	} else {
-		LIBS += -lqwt
-		LIBS += -L$$PWD/libs/LimeReport/build/$${QT_VERSION}/win32/release/lib
-	}
+
 	equals(GCC_MACHINE,  x86_64-w64-mingw32){
 		LIBS += -L$$PWD/libs/luasol/win64
-		message(Win32 64bit)
+		message(Win32 64bit $${QT_VERSION})
+		CONFIG(debug, debug|release) {
+		        LIBS += -L$$QWT_DIR/build/Desktop_Qt_5_15_2_MinGW_64_bit-Release/lib
+			LIBS += -lqwtd
+			LIBS += -L$$PWD/libs/LimeReport/build/$${QT_VERSION}/win64/debug/lib
+		} else {
+		        LIBS += -L$$QWT_DIR/build/Desktop_Qt_5_15_2_MinGW_64_bit-Debug/lib
+			LIBS += -lqwt
+			LIBS += -L$$PWD/libs/LimeReport/build/$${QT_VERSION}/win64/release/lib
+
+                }
 	}
 	equals(GCC_MACHINE, i686-w64-mingw32){
 		LIBS += -L$$PWD/libs/luasol/win32
 		message(Win32 32bit)
+		CONFIG(debug, debug|release) {
+		        LIBS += -L$$QWT_DIR/build/Desktop_Qt_5_15_2_MinGW_32_bit-Debug/lib
+			LIBS += -lqwtd
+			LIBS += -L$$PWD/libs/LimeReport/build/$${QT_VERSION}/win32/debug/lib
+		} else {
+		        LIBS += -L$$QWT_DIR/build/Desktop_Qt_5_15_2_MinGW_32_bit-Release/lib
+			LIBS += -lqwt
+			LIBS += -L$$PWD/libs/LimeReport/build/$${QT_VERSION}/win32/release/lib
+		}
 	}
 	LIBS += -llua53
 	SH = C:/Program Files/Git/bin/sh.exe

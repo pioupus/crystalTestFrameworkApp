@@ -150,7 +150,12 @@ ReturnType sol_call(sol::state &lua, const char *function_name, Arguments &&... 
     sol::protected_function f = lua[function_name];
     auto call_res = f(std::forward<Arguments>(args)...);
     if (call_res.valid()) {
-        return static_cast<ReturnType>(call_res);
+        if constexpr (std::is_same_v<ReturnType, sol::table>) {
+           return static_cast<sol::table_core<false> &&>(call_res);
+        }
+        else {
+            return static_cast<ReturnType>(call_res);
+        }
     }
     sol::error error = call_res;
     throw error;
