@@ -6,6 +6,9 @@ libs/build_limereport
 libs/qwt/build_qwt
 libs/qwt/qwt-6.1.3
 
+build/*
+docs/*
+
 # Object files
 *.o
 *.ko
