@@ -50,15 +50,25 @@ static void message_handler(QtMsgType type, const QMessageLogContext &context, c
 int main(int argc, char *argv[]) {
     QCoreApplication::setOrganizationName("CPG");
     QCoreApplication::setApplicationName("Crystal Test Framework App");
+#ifdef QT_DEBUG
+#if 0
+    qputenv("QT_FATAL_WARNINGS", "1");
+    qSetMessagePattern(
+        "Type: %{type}\nProduct Name: %{appname}\nFile: %{file}\nLine: %{line}\nMethod: %{function}\nThreadID: %{threadid}\nThreadPtr: %{qthreadptr}\nMessage: "
+        "%{message}");
+#endif
+#endif
+
     old_handler = qInstallMessageHandler(message_handler);
     //QSettings::setDefaultFormat(QSettings::IniFormat); //this way we would save the settings in an ini file. but better keep it in registry to maintain compatibility
     QApplication a(argc, argv);
 
+#if 0
     QTranslator qtTranslator;
     if (qtTranslator.load(QLocale::system(), "qt", "_", QLibraryInfo::path(QLibraryInfo::TranslationsPath))) {
         a.installTranslator(&qtTranslator);
     }
-
+#endif
     MainWindow w;
     //  a.setWindowIcon(QIcon("://src/icons/app_icon_multisize.png"));
     auto retval = a.exec();

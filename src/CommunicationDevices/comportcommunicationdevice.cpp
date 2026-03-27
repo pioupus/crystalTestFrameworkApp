@@ -49,19 +49,19 @@ bool ComportCommunicationDevice::connect(const QMap<QString, QVariant> &portinfo
         port.setBaudRate(portinfo_[BAUD_RATE_TAG].toInt());
         wait_after_open = std::chrono::milliseconds(portinfo_[WAIT_AFTER_OPEN_TAG_ms].toInt());
         //opening a port can block for 20 seconds, meaning that no devices are serviced for that time, so we spawn a thread
-        QThread thread;
-        thread.start();
-        port.moveToThread(&thread);
+        //  QThread thread;
+        //  thread.start();
+        //  port.moveToThread(&thread);
         const bool result = Utility::promised_thread_call(&port, [&, wait_after_open = wait_after_open, device_thread = QThread::currentThread()] {
             const bool result = port.open(QIODevice::ReadWrite);
             int sleepval_ms = std::chrono::duration_cast<std::chrono::milliseconds>(wait_after_open).count();
             qDebug() << port.portName() << "WAIT_AFTER_OPEN_TAG_ms" << sleepval_ms;
             QThread::currentThread()->msleep(sleepval_ms);
-            port.moveToThread(device_thread);
+            //   port.moveToThread(device_thread);
             return result;
         });
-        thread.exit();
-        thread.wait();
+        // thread.exit();
+        //thread.wait();
 
         if (result) {
             QString protocol_name = portinfo_[TYPE_NAME_TAG].toString();
@@ -71,7 +71,7 @@ bool ComportCommunicationDevice::connect(const QMap<QString, QVariant> &portinfo
             }
             text += portinfo_[HOST_NAME_TAG].toString() + ", bd: " + portinfo_[BAUD_RATE_TAG].toString();
             auto ba = QByteArray();
-            ba.append(text.toUtf8());//ist utf8 das was wir wollen?
+            ba.append(text.toUtf8()); //ist utf8 das was wir wollen?
             emit connected(ba);
         } else {
             qDebug() << QString("could not open ") + portinfo_[HOST_NAME_TAG].toString();

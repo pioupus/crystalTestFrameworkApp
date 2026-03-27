@@ -5,9 +5,9 @@
 #include "console.h"
 #include "scriptengine.h"
 
-#include <QRegularExpression>
 #include <QDebug>
 #include <QPlainTextEdit>
+#include <QRegularExpression>
 #include <QSettings>
 #include <QStringList>
 #include <QTreeWidget>
@@ -51,6 +51,7 @@ static QTreeWidgetItem *add_entry(QTreeWidget *item, QStringList &&list) {
 TestDescriptionLoader::TestDescriptionLoader(QTreeWidget *test_list, const QString &file_path, const QString &display_name)
     : name(display_name)
     , file_path(file_path) {
+#if 0
     console = Utility::promised_thread_call(MainWindow::mw, [&] {
         auto link_console = std::make_unique<PlainTextEdit>();
         link_console->setReadOnly(true);
@@ -62,7 +63,10 @@ TestDescriptionLoader::TestDescriptionLoader(QTreeWidget *test_list, const QStri
         ui_entry->setData(0, Qt::UserRole, QVariant::fromValue(this));
         return link_console;
     });
-    reload();
+#else
+    console = nullptr;
+#endif
+    // reload();
 }
 
 TestDescriptionLoader::TestDescriptionLoader(TestDescriptionLoader &&other)
@@ -71,7 +75,9 @@ TestDescriptionLoader::TestDescriptionLoader(TestDescriptionLoader &&other)
     , name(std::move(other.name))
     , file_path(std::move(other.file_path))
     , device_requirements(std::move(other.device_requirements)) {
-    Utility::promised_thread_call(MainWindow::mw, [this] { ui_entry->setData(0, Qt::UserRole, QVariant::fromValue(this)); });
+    Utility::promised_thread_call(MainWindow::mw, [this] {
+        //ui_entry->setData(0, Qt::UserRole, QVariant::fromValue(this)); //
+    });
 }
 
 TestDescriptionLoader &TestDescriptionLoader::operator=(TestDescriptionLoader &&other) {
@@ -80,7 +86,9 @@ TestDescriptionLoader &TestDescriptionLoader::operator=(TestDescriptionLoader &&
     name = std::move(other.name);
     file_path = std::move(other.file_path);
     device_requirements = std::move(other.device_requirements);
-    Utility::promised_thread_call(MainWindow::mw, [this] { ui_entry->setData(0, Qt::UserRole, QVariant::fromValue(this)); });
+    Utility::promised_thread_call(MainWindow::mw, [this] {
+        //ui_entry->setData(0, Qt::UserRole, QVariant::fromValue(this));//
+    });
     return *this;
 }
 
@@ -107,6 +115,7 @@ void TestDescriptionLoader::launch_editor() {
 }
 
 void TestDescriptionLoader::load_description() {
+    assert(console);
     Utility::promised_thread_call(MainWindow::mw, [&] {
         ui_entry->setText(1, "");
         console->clear();

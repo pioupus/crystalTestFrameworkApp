@@ -1,7 +1,8 @@
-CONFIG += c++17
 CONFIG += strict_c++
-QMAKE_CXXFLAGS += -std=c++17
-
+#CONFIG += c++17
+#QMAKE_CXXFLAGS += -std=c++17
+#QMAKE_CXXFLAGS += -fsanitize=undefined,address
+#QMAKE_LFLAGS += -fsanitize=undefined,address
 QT = gui core network serialport xml svg qml
 QT += sql printsupport
 
@@ -14,27 +15,37 @@ INCLUDEPATH += $$PWD/src
 QMAKE_CXXFLAGS += -isystem $$PWD/libs/luasol/include
 
 win32 {
-	QWT_DIR = $$PWD/libs/qwt
-        QMAKE_CXXFLAGS += -isystem $$QWT_DIR/qwt-6.3.0/src
+        QWT_DIR = $$PWD/libs/qwt-6.3.0
+	QMAKE_CXXFLAGS += -isystem $$QWT_DIR/src
 	LIBS += -L$$QWT_DIR/build_qwt/lib
 
+equals(GCC_MACHINE,  x86_64-w64-mingw32){
+        LIBS += -L$$PWD/libs/luasol/win64
+	message(Win32 64bit $${QT_VERSION})
 	CONFIG(debug, debug|release) {
+	        LIBS += -L$$QWT_DIR/build/Desktop_Qt_6_10_1_MinGW_64_bit-Release/lib
+		LIBS += -lqwtd
+		LIBS += -L$$PWD/libs/LimeReport/build/$${QT_VERSION}/win64/debug/lib
+	} else {
+	        LIBS += -L$$QWT_DIR/build/Desktop_Qt_6_10_1_MinGW_64_bit-Debug/lib
+		LIBS += -lqwt
+		LIBS += -L$$PWD/libs/LimeReport/build/$${QT_VERSION}/win64/release/lib
+
+        }
+}
+equals(GCC_MACHINE, i686-w64-mingw32){
+        LIBS += -L$$PWD/libs/luasol/win32
+	message(Win32 32bit)
+	CONFIG(debug, debug|release) {
+	        LIBS += -L$$QWT_DIR/build/Desktop_Qt_5_15_2_MinGW_32_bit-Debug/lib
 		LIBS += -lqwtd
 		LIBS += -L$$PWD/libs/LimeReport/build/$${QT_VERSION}/win32/debug/lib
-                LIBS += -L$$PWD/libs/LimeReport/build/$${QT_VERSION}/win64/debug/lib
 	} else {
+	        LIBS += -L$$QWT_DIR/build/Desktop_Qt_5_15_2_MinGW_32_bit-Release/lib
 		LIBS += -lqwt
 		LIBS += -L$$PWD/libs/LimeReport/build/$${QT_VERSION}/win32/release/lib
-                LIBS += -L$$PWD/libs/LimeReport/build/$${QT_VERSION}/win64/release/lib
 	}
-	equals(GCC_MACHINE,  x86_64-w64-mingw32){
-		LIBS += -L$$PWD/libs/luasol/win64
-		message(Win32 64bit)
-	}
-	equals(GCC_MACHINE, i686-w64-mingw32){
-		LIBS += -L$$PWD/libs/luasol/win32
-		message(Win32 32bit)
-	}
+}
 	LIBS += -llua53
 	SH = C:/Program Files/Git/bin/sh.exe
 

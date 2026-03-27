@@ -36,11 +36,11 @@
 #include <QProcess>
 #include <QProgressDialog>
 #include <QSettings>
+#include <QStandardPaths>
 #include <QStatusBar>
 #include <QStringList>
 #include <QTimer>
 #include <QTreeWidgetItem>
-#include <QStandardPaths>
 #include <QUrl>
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
@@ -330,7 +330,7 @@ MainWindow::MainWindow(QWidget *parent)
     progress_bar.show();
     progress_bar.setValue(progress_bar.value() + 5);
 
-    load_scripts(&progress_bar);
+    // load_scripts(&progress_bar);
     ui->test_simple_view->installEventFilter(this);
     progress_bar.setValue(progress_bar.value() + 5);
     ViewMode vm = string_to_view_mode(QSettings{}.value(Globals::last_view_mode_key, "").toString());
@@ -407,12 +407,14 @@ void MainWindow::shutdown() {
 
 void MainWindow::align_columns() {
     assert(currently_in_gui_thread());
+#if 0
     for (int i = 0; i < ui->devices_list->columnCount(); i++) {
         ui->devices_list->resizeColumnToContents(i);
     }
     for (int i = 0; i < ui->tests_advanced_view->columnCount(); i++) {
         ui->tests_advanced_view->resizeColumnToContents(i);
     }
+#endif
 }
 
 QTreeWidgetItem *MainWindow::create_manual_devices_parent_item() {
@@ -457,7 +459,8 @@ void MainWindow::load_scripts(QProgressDialog *dialog) {
     dialog->setValue(dialog->value() + 1);
     test_descriptions.clear();
     dialog->setValue(dialog->value() + 1);
-    const auto dir = QSettings{}.value(Globals::test_script_path_settings_key, "").toString();
+    //const auto dir = QSettings{}.value(Globals::test_script_path_settings_key, "").toString();
+    QString dir = "//amelie/Austausch/Alle/CrystalTestFramework/scripts/Entwicklung/test";
     std::optional<Thread_pool> othread_pool{std::in_place};
     auto &thread_pool = othread_pool.value();
     std::mutex test_descriptions_mutex;
@@ -473,29 +476,60 @@ void MainWindow::load_scripts(QProgressDialog *dialog) {
     for (QDirIterator dit{dir, QStringList{} << "*.lua", QDir::Files, QDirIterator::Subdirectories}; dit.hasNext();) {
         auto file_path = dit.next();
         thread_pool.push([&tasks_done, &test_descriptions_mutex, &new_test_descriptions, &dir, this, file_path = std::move(file_path)] {
-            auto return_value = TestDescriptionLoader{ui->tests_advanced_view, file_path, QDir{dir}.relativeFilePath(file_path)};
-            tasks_done++;
             std::unique_lock l{test_descriptions_mutex};
+            qDebug() << file_path;
+            qDebug() << __FILE__ << ':' << __LINE__; // kommt hier vorbei
+            auto return_value =
+                TestDescriptionLoader{ui->tests_advanced_view, file_path, QDir{dir}.relativeFilePath(file_path)}; //hat ein Utility::promised_thread_call
+            qDebug() << __FILE__ << ':' << __LINE__;                                                              // kommt hier vorbei
+            tasks_done++;
+            qDebug() << __FILE__ << ':' << __LINE__ << return_value.get_filepath(); // kommt hier vorbei
+                                                                                    // new_test_descriptions.clear();
+#if 1
             new_test_descriptions.push_back(std::move(return_value));
+            qDebug() << __FILE__ << ':' << __LINE__; // kommt hier vorbei
+#endif
         });
         tasks++;
     }
     dialog->setMaximum(4 + tasks * (Script_loading_progress_factors::script_loading + Script_loading_progress_factors::favorite_loading +
                                     Script_loading_progress_factors::set_enable_state));
+#if 1
     {
+        qDebug() << __FILE__ << ':' << __LINE__; //kommt hier vorbei
         auto close_threads = std::async(std::launch::async, [&othread_pool] { othread_pool = std::nullopt; });
+        qDebug() << __FILE__ << ':' << __LINE__; //kommt hier vorbei
+
+#if 1
         while (close_threads.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout) {
-            dialog->setValue(3 + tasks_done * Script_loading_progress_factors::script_loading);
+            qDebug() << __FILE__ << ':' << __LINE__; //kommt hier vorbei  2x
+                                                     // dialog->setValue(3 + tasks_done * Script_loading_progress_factors::script_loading);
+            qDebug() << __FILE__ << ':' << __LINE__; //kommt hier vorbei        2x
             QApplication::processEvents();
+            qDebug() << __FILE__ << ':' << __LINE__; //kommt hier vorbei 1x
         }
+        qDebug() << __FILE__ << ':' << __LINE__; //gecrasht
+#else
+        QApplication::processEvents();
+        close_threads.wait_for(std::chrono::milliseconds(100));
+#endif
     }
+#endif
+#if 0
+    qDebug() << __FILE__ << ':' << __LINE__;
     std::swap(test_descriptions, new_test_descriptions);
+    qDebug() << __FILE__ << ':' << __LINE__;
     load_favorites(dialog);
+    qDebug() << __FILE__ << ':' << __LINE__;
     statusBar()->clearMessage();
+    qDebug() << __FILE__ << ':' << __LINE__;
     ui->tbtn_refresh_scripts->setEnabled(enabled_a);
     ui->actionReload_All_Scripts->setEnabled(enabled_b);
     dialog->setValue(dialog->value() + 1);
+    qDebug() << __FILE__ << ':' << __LINE__;
     QApplication::processEvents();
+    qDebug() << __FILE__ << ':' << __LINE__;
+#endif
 }
 
 void MainWindow::load_favorites(QProgressDialog *dialog) {
@@ -514,7 +548,7 @@ void MainWindow::load_favorites(QProgressDialog *dialog) {
                 item->setText(favorite_entry.alternative_name);
             }
             item->setFlags(item->flags() | Qt::ItemIsEditable);
-            item->setData(Qt::UserRole, QVariant::fromValue(test.ui_entry.get()));
+            //item->setData(Qt::UserRole, QVariant::fromValue(test.ui_entry.get()));
             item->setToolTip(favorite_entry.script_path);
             Identicon ident_icon{test.get_name().toLocal8Bit()};
             const int SCALE_FACTOR = 12;
@@ -581,6 +615,8 @@ void MainWindow::add_device_child_item(QTreeWidgetItem *parent, QTreeWidgetItem 
 
             PlainTextEdit *console = nullptr;
             if (index == -1) {
+                assert(ui->console_tabs);
+                qDebug() << ui->console_tabs;
                 console = new PlainTextEdit(ui->console_tabs);
                 QObject::connect(console, &PlainTextEdit::linkActivated, this, &MainWindow::link_activated);
                 console->setLineWrapMode(QPlainTextEdit::LineWrapMode::NoWrap);

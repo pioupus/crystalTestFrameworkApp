@@ -287,6 +287,7 @@ void DeviceWorker::detect_devices(std::vector<PortDescription *> device_list) {
         devices_map[device->device.get()].push_back(device);
     }
 
+#if 0
     std::vector<std::future<void>> threads;
     for (auto &com_devs : devices_map) {
         threads.push_back(
@@ -304,6 +305,7 @@ void DeviceWorker::detect_devices(std::vector<PortDescription *> device_list) {
             QApplication::processEvents();
         }
     }
+#endif
 }
 
 DeviceWorker::~DeviceWorker() {}
@@ -529,6 +531,7 @@ void DeviceWorker::update_devices() {
         }
     }
 
+#if 0
     auto tmc_devices = LIBUSBScan::scan();
 
     for (auto &port : tmc_devices) {
@@ -546,7 +549,7 @@ void DeviceWorker::update_devices() {
         CommunicationDevice *device = port_desc->device.get();
         MainWindow::mw->add_device_item(port_desc->ui_entry, port, device);
     }
-
+#endif
     //});
 }
 
